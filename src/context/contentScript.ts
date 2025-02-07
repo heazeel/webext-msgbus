@@ -1,6 +1,6 @@
-import MessageRuntime from './internal/MessageRuntime';
-import PostMessage from './internal/PostMessage';
-import PersistentPort from './internal/PersistentPort';
+import MessageRuntime from '../internal/MessageRuntime';
+import PersistentPort from '../internal/PersistentPort';
+import PostMessage from '../internal/PostMessage';
 
 // content脚本首次与后台建立连接时不需要指定名称，有后台根据sneder信息自动分配
 const port = new PersistentPort();
@@ -44,3 +44,5 @@ port.onFailure((message) => {
 });
 
 export const { sendMessage, onMessage } = messageRuntime;
+
+export default messageRuntime;

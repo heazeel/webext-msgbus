@@ -1,0 +1,47 @@
+{
+  "name": "webext-msgbus-example",
+  "version": "1.0",
+  "description": "Example of using webext-msgbus",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "webext-msgbus-example",
+    "default_popup": "./popup/popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "run_at": "document_start",
+      "all_frames": true
+    },
+    {
+      "matches": ["<all_urls>"],
+      "js": ["inject/inject.js"],
+      "run_at": "document_start",
+      "all_frames": true,
+      "world": "MAIN"
+    }
+  ],
+  "devtools_page": "devtools/devtools.html",
+  "options_page": "options/options.html",
+  "browser_specific_settings": {
+    "edge": {
+      "browser_action_next_to_addressbar": true
+    }
+  },
+  "permissions": [
+    "notifications",
+    "contextMenus",
+    "scripting",
+    "tabs",
+    "activeTab",
+    "storage",
+    "unlimitedStorage",
+    "webRequest"
+  ],
+  "host_permissions": ["<all_urls>"]
+}

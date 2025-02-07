@@ -1,6 +1,6 @@
 import type { InternalMessage } from '../types';
+import { decodeConnectionArgs, encodeConnectionArgs } from '../utils/connection';
 import { createPortId, PortName } from '../utils/port';
-import { encodeConnectionArgs, decodeConnectionArgs } from '../utils/connection';
 import { createWaittingReplyQueue } from '../utils/waittingReply';
 import type { StatusMessage } from './PortMessage';
 import PortMessage from './PortMessage';
@@ -48,21 +48,34 @@ class PersistentPort {
   private onMessageListeners = new Set<(message: InternalMessage) => void>();
   private onFailureListeners = new Set<(message: InternalMessage) => void>();
 
-  constructor(private name: string = '') {
+  constructor(readonly name: PortName | string = '') {
     this.connect();
   }
 
   private connect() {
     this.port = chrome.runtime.connect({
-      name: encodeConnectionArgs({ portName: this.name, portId: this.portId }),
+      name: encodeConnectionArgs({ portName: this.name as PortName, portId: this.portId }),
     });
 
-    this.port.onMessage.addListener((msg) => this.handleMessage(msg));
+    if (chrome.runtime.lastError) {
+      // 连接失败，通常是由于background脚本缺失导致
+      console.error(
+        'connect failed, normally caused by missing background script. stack:',
+        chrome.runtime.lastError,
+      );
+      return;
+    }
+
+    this.port.onMessage.addListener((msg) => this.handleMessage(msg as StatusMessage));
+
     /**
      * service worker 会在不使用时终止，需要在连接断开时重新与后台建立连接，以此来唤醒后台脚本
      * https://developer.chrome.com/blog/eyeos-journey-to-testing-mv3-service%20worker-suspension?hl=zh-cn
      */
-    this.port.onDisconnect.addListener(() => this.connect());
+    this.port.onDisconnect.addListener(() => {
+      console.error('disconnected, reconnecting...');
+      this.connect();
+    });
 
     PortMessage.toBackground(this.port, {
       type: 'sync_with_bg',
@@ -72,7 +85,7 @@ class PersistentPort {
   }
 
   private handleMessage = (msg: StatusMessage) => {
-    console.log(`${decodeConnectionArgs(this.port.name)?.portName || 'content'}收到消息`, msg);
+    console.log(`${decodeConnectionArgs(this.port.name)?.portName || 'content'} 收到消息`, msg);
 
     switch (msg.status) {
       case 'cannot_transfer': {

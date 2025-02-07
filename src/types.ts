@@ -1,5 +1,6 @@
 import type { JsonValue } from 'type-fest';
-import type { PortName, PortInfo, PortId } from './utils/port';
+
+import type { PortId, PortInfo, PortName } from './utils/port';
 
 export type RuntimeContext =
   | 'devtools'

@@ -1,12 +1,12 @@
-import { formatPortInfo, parsePortInfo, createPortId } from './utils/port';
-import type { PortName, PortId } from './utils/port';
-import { decodeConnectionArgs } from './utils/connection';
-import type { WaittingReply } from './utils/waittingReply';
-import { createWaittingReplyQueue } from './utils/waittingReply';
-import type { RequestMessage } from './internal/PortMessage';
-import PortMessage from './internal/PortMessage';
-import type { InternalMessage } from './types';
-import MessageRuntime from './internal/MessageRuntime';
+import MessageRuntime from '../internal/MessageRuntime';
+import type { RequestMessage } from '../internal/PortMessage';
+import PortMessage from '../internal/PortMessage';
+import type { InternalMessage } from '../types';
+import { decodeConnectionArgs } from '../utils/connection';
+import type { PortId, PortName } from '../utils/port';
+import { createPortId, formatPortInfo, parsePortInfo } from '../utils/port';
+import type { WaittingReply } from '../utils/waittingReply';
+import { createWaittingReplyQueue } from '../utils/waittingReply';
 
 interface PortConnection {
   port: chrome.runtime.Port;
@@ -16,7 +16,7 @@ interface PortConnection {
 const waittingReplyQueue = createWaittingReplyQueue();
 const connectionMap = new Map<PortName, PortConnection>();
 const oncePortConnectedCbs = new Map<PortName, Set<() => void>>();
-const onceSessionEndCbs = new Map<PortName, Set<() => void>>();
+const onceSessionEndCbs = new Map<PortId, Set<() => void>>();
 
 const oncePortConnected = (portName: PortName, cb: () => void) => {
   oncePortConnectedCbs.set(portName, (oncePortConnectedCbs.get(portName) || new Set()).add(cb));
@@ -145,7 +145,7 @@ const messageRuntime = new MessageRuntime(
     message.destination.tabId = null;
 
     const senderConnection = connectionMap.get(senderName) as PortConnection;
-    const destConnection = connectionMap.get(destName) as PortConnection | undefined;
+    const destConnection = connectionMap.get(destName) as PortConnection;
 
     // 信息传递
     const transfer = () => {
@@ -155,11 +155,11 @@ const messageRuntime = new MessageRuntime(
         message,
         from: {
           portName: senderName,
-          portId: senderConnection.portId,
+          portId: senderConnection?.portId,
         },
         to: {
           portName: destName,
-          portId: (destConnection as PortConnection).portId,
+          portId: destConnection?.portId,
         },
       };
 
@@ -268,7 +268,8 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
     onceSessionEndCbs.delete(currentPort.portId);
   });
 
-  port.onMessage.addListener((msg: RequestMessage) => {
+  port.onMessage.addListener((_msg) => {
+    const msg = _msg as RequestMessage;
     if (msg.type === 'send_to_bg' && msg.message?.origin?.context) {
       msg.message.origin.tabId = linkedTabId;
       messageRuntime.handleMessage(msg.message);
@@ -312,3 +313,5 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
 });
 
 export const { sendMessage, onMessage } = messageRuntime;
+
+export default messageRuntime;

@@ -1,36 +1,57 @@
 {
   "name": "webext-msgbus",
-  "version": "1.0.0",
-  "description": "浏览器插件消息通信中枢",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "version": "0.0.1",
+  "type": "module",
+  "exports": {
+    "./background": {
+      "import": "./dist/context/background.js",
+      "require": "./dist/context/background.cjs",
+      "types": "./dist/context/background.d.ts"
+    },
+    "./contentScript": {
+      "import": "./dist/context/contentScript.js",
+      "require": "./dist/context/contentScript.cjs",
+      "types": "./dist/context/contentScript.d.ts"
+    },
+    "./devtools": {
+      "import": "./dist/context/devtools.js",
+      "require": "./dist/context/devtools.cjs",
+      "types": "./dist/context/devtools.d.ts"
+    },
+    "./options": {
+      "import": "./dist/context/options.js",
+      "require": "./dist/context/options.cjs",
+      "types": "./dist/context/options.d.ts"
+    },
+    "./popup": {
+      "import": "./dist/context/popup.js",
+      "require": "./dist/context/popup.cjs",
+      "types": "./dist/context/popup.d.ts"
+    },
+    "./injectScript": {
+      "import": "./dist/context/injectScript.js",
+      "require": "./dist/context/injectScript.cjs",
+      "types": "./dist/context/injectScript.d.ts"
+    }
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/heazeel/webext-msgbus.git"
-  },
-  "keywords": [
-    "web-extension"
+  "files": [
+    "README.md",
+    "package.json",
+    "dist/**/*"
   ],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/heazeel/webext-msgbus/issues"
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch"
   },
-  "homepage": "https://github.com/heazeel/webext-msgbus#readme",
+  "devDependencies": {
+    "@rslib/core": "^0.4.0",
+    "@types/chrome": "^0.0.301",
+    "@types/node": "^22.8.1",
+    "typescript": "^5.7.3"
+  },
   "dependencies": {
     "serialize-error": "^12.0.0",
     "tiny-uid": "^1.1.2",
-    "webextension-polyfill": "^0.12.0"
-  },
-  "devDependencies": {
-    "@types/webextension-polyfill": "^0.12.1",
-    "eslint": "^9.17.0",
-    "eslint-config-prettier": "^9.1.0",
-    "eslint-plugin-prettier": "^5.2.1",
-    "prettier": "^3.4.2",
-    "typescript": "^5.7.2",
-    "typescript-eslint": "^8.19.0"
+    "type-fest": "^4.33.0"
   }
 }

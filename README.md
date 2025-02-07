@@ -1,2 +1,23 @@
-# webext-msgbus
-浏览器插件消息通信中枢
+# Rslib project
+
+## Setup
+
+Install the dependencies:
+
+```bash
+pnpm install
+```
+
+## Get started
+
+Build the library:
+
+```bash
+pnpm build
+```
+
+Build the library in watch mode:
+
+```bash
+pnpm dev
+```

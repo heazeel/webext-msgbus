@@ -1,5 +1,5 @@
 import type { InternalMessage } from '../types';
-import { getMessagePort } from './messagePort';
+import { getMessagePort } from './MessagePort';
 
 interface PortWontRespondError {
   type: 'error';

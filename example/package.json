@@ -1,0 +1,21 @@
+{
+  "name": "rsbuild-react-ts",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "build": "npm run build:plugin && rsbuild build",
+    "build:plugin": "cd .. && npm run build"
+  },
+  "dependencies": {
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@rsbuild/core": "^1.2.3",
+    "@rsbuild/plugin-react": "^1.1.0",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "typescript": "^5.7.3",
+    "webext-msgbus": "file:.."
+  }
+}

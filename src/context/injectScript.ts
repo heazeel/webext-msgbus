@@ -1,5 +1,5 @@
-import MessageRuntime from './internal/MessageRuntime';
-import PostMessage from './internal/PostMessage';
+import MessageRuntime from '../internal/MessageRuntime';
+import PostMessage from '../internal/PostMessage';
 
 // inject-script 与 content-script 之间需要通过 postMessage 通信
 const win = new PostMessage('inject-script');
@@ -15,3 +15,5 @@ win.onMessage((msg) => {
 });
 
 export const { sendMessage, onMessage } = messageRuntime;
+
+export default messageRuntime;

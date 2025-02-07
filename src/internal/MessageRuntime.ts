@@ -1,6 +1,7 @@
-import type { JsonValue } from 'type-fest';
-import uuid from 'tiny-uid';
 import { serializeError } from 'serialize-error';
+import uuid from 'tiny-uid';
+import type { Jsonify, JsonValue } from 'type-fest';
+
 import type { BridgeMessage, InternalMessage, OnMessageCallback, RuntimeContext } from '../types';
 import { parsePortInfo, PortName } from '../utils/port';
 
@@ -92,7 +93,6 @@ class MessageRuntime {
           });
 
           if (err && !noHandlerFoundError) {
-            // eslint-disable-next-line no-unsafe-finally
             throw reply;
           }
         }
@@ -129,11 +129,11 @@ class MessageRuntime {
    * @param destination 消息接收方
    * @returns
    */
-  public sendMessage = <Data extends JsonValue>(
+  public sendMessage = <ReturnData extends JsonValue>(
     messageID: string,
     data: JsonValue,
     destination: PortName,
-  ): Promise<Data> => {
+  ): Promise<ReturnData> => {
     const destPortInfo = parsePortInfo(destination);
 
     if (!destPortInfo.context) {
@@ -178,9 +178,9 @@ class MessageRuntime {
    * @param callback 消息回调
    * @returns
    */
-  public onMessage = <Data extends JsonValue>(
+  public onMessage = <ReceiveData extends JsonValue>(
     messageID: string,
-    callback: OnMessageCallback<Data, any>,
+    callback: OnMessageCallback<ReceiveData, any>,
   ) => {
     this.onMessageListeners.set(messageID, callback as OnMessageCallback<JsonValue, any>);
     return () => this.onMessageListeners.delete(messageID);

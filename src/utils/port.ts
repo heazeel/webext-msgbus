@@ -1,9 +1,12 @@
 import uid from 'tiny-uid';
+
 import type { RuntimeContext } from '../types';
 
 export type PortId = `uid::${string}`;
 export type PortName =
-  | Omit<RuntimeContext, 'inject-script' | 'content-script' | 'devtools'>
+  | 'background'
+  | 'popup'
+  | 'options'
   | `inject-script@${number}`
   | `content-script@${number}`
   | `devtools@${number}`;
@@ -38,12 +41,17 @@ export const parsePortInfo = (portName: PortName): PortInfo => {
 /**
  * 格式化端点信息
  * background、popup、options直接返回 context
- * content-script、inject-script返回 context@tabId
+ * devtools、content-script、inject-script 返回 context@tabId
  * @param params
  * @returns
  */
 export const formatPortInfo = ({ context, tabId }: PortInfo): PortName => {
-  if (['background', 'popup', 'options'].includes(context)) return context;
+  if (['background', 'popup', 'options'].includes(context)) {
+    return context as 'background' | 'popup' | 'options';
+  }
 
-  return `${context}@${tabId}`;
+  return `${context}@${tabId}` as
+    | `devtools@${number}`
+    | `content-script@${number}`
+    | `inject-script@${number}`;
 };
