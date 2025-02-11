@@ -11,6 +11,11 @@ const isValidConnectionArgs = (args: any): boolean => {
   );
 };
 
+/**
+ * 编码参数，返回字符串
+ * @param args
+ * @returns
+ */
 export const encodeConnectionArgs = (args: ConnectionArgs): string => {
   return JSON.stringify(args);
 };

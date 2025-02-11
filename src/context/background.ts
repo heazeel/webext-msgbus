@@ -1,12 +1,13 @@
 import MessageRuntime from '../internal/MessageRuntime';
-import type { RequestMessage } from '../internal/PortMessage';
 import PortMessage from '../internal/PortMessage';
-import type { InternalMessage } from '../types';
 import { decodeConnectionArgs } from '../utils/connection';
-import type { PortId, PortName } from '../utils/port';
-import { createPortId, formatPortInfo, parsePortInfo } from '../utils/port';
-import type { WaittingReply } from '../utils/waittingReply';
 import { createWaittingReplyQueue } from '../utils/waittingReply';
+import { createPortId, formatConnectionInfo, parseConnectionInfo } from '../utils/port';
+
+import type { RequestMessage } from '../internal/PortMessage';
+import type { InternalMessage } from '../types';
+import type { PortId, PortName } from '../utils/port';
+import type { WaittingReply } from '../utils/waittingReply';
 
 interface PortConnection {
   port: chrome.runtime.Port;
@@ -129,13 +130,13 @@ const messageRuntime = new MessageRuntime(
     // 发送者信息
     // 对于 inject-script 的消息, 发送者上下文是 content-script
     // 因为 inject-script 不能直接通过端口通信，只能通过 content-script 转发
-    const senderName = formatPortInfo({
+    const senderName = formatConnectionInfo({
       ...origin,
       context: origin.context === 'inject-script' ? 'content-script' : origin.context,
     });
 
     // 接收者信息
-    const destName = formatPortInfo({
+    const destName = formatConnectionInfo({
       ...destination,
       context: destination.context === 'inject-script' ? 'content-script' : destination.context,
       tabId: destination.tabId || origin.tabId,
@@ -163,8 +164,8 @@ const messageRuntime = new MessageRuntime(
         },
       };
 
-      if (message.messageType === 'send') waittingReplyQueue.add(receipt);
-      if (message.messageType === 'reply') waittingReplyQueue.remove(message.messageID);
+      if (message.messageType === 'receive') waittingReplyQueue.add(receipt);
+      if (message.messageType === 'reply') waittingReplyQueue.remove(message.messageId);
 
       if (senderConnection) {
         PortMessage.toExtensionContext(senderConnection.port, {
@@ -179,21 +180,19 @@ const messageRuntime = new MessageRuntime(
       return;
     }
 
-    if (message.messageType === 'send') {
+    if (message.messageType === 'receive') {
       if (message.origin.context === 'background') {
         oncePortConnected(destName, transfer);
         return;
       }
 
       if (senderConnection?.port) {
-        notifyPort(senderName, senderConnection.portId)
-          .cannotTransfer(destName, message)
-          .retry(destName);
+        notifyPort(senderName, senderConnection.portId).cannotTransfer(destName, message);
       }
     }
   },
   (message) => {
-    const senderName = formatPortInfo({
+    const senderName = formatConnectionInfo({
       ...message.origin,
       ...(message.origin.context === 'inject-script' && { context: 'content-script' }),
     });
@@ -218,28 +217,31 @@ const messageRuntime = new MessageRuntime(
 );
 
 chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
-  const currentPort = decodeConnectionArgs(port.name);
-  if (!currentPort) return;
+  const connectionInfo = decodeConnectionArgs(port.name);
+  if (!connectionInfo) {
+    console.error('wrong connection args: ', port);
+    return;
+  }
 
   // 对于content-script，首次创建连接时未指定name，因为tabId是运行时才知道的
   // 但需要在运行时结合port.sender中的tabid重新生成name，这样background才能准确的发送消息到指定的tab上下文中
-  currentPort.portName ||= formatPortInfo({
+  connectionInfo.portName ||= formatConnectionInfo({
     context: 'content-script',
-    tabId: port?.sender?.tab?.id || null,
+    tabId: port.sender?.tab?.id || null,
   });
-  const { tabId: linkedTabId } = parsePortInfo(currentPort.portName);
+  const { tabId: linkedTabId } = parseConnectionInfo(connectionInfo.portName);
 
-  connectionMap.set(currentPort.portName, {
-    portId: currentPort.portId,
+  connectionMap.set(connectionInfo.portName, {
+    portId: connectionInfo.portId,
     port: port,
   });
 
-  console.log('所有连接', connectionMap);
+  console.log('all connections: ', connectionMap);
 
-  onceSessionEnded(currentPort.portId, () => {
+  onceSessionEnded(connectionInfo.portId, () => {
     const noNeedWait = waittingReplyQueue
       .entries()
-      .filter((waittingReply) => waittingReply.to.portId === currentPort.portId);
+      .filter((waittingReply) => waittingReply.to.portId === connectionInfo.portId);
 
     waittingReplyQueue.remove(noNeedWait);
 
@@ -248,7 +250,7 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
         messageRuntime.endTask(waittingReply.message.taskId);
       } else if (waittingReply.from.portName) {
         notifyPort(waittingReply.from.portName, waittingReply?.from?.portId || undefined).terminate(
-          currentPort.portId,
+          connectionInfo.portId,
         );
       }
     });
@@ -257,23 +259,23 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
   port.onDisconnect.addListener(() => {
     // 特殊情况下，原本的内容脚本的 onDisconnect 会在新的内容脚本的 onConnect 之后被调用
     // 如果直接根据 portName 删除连接，也会将新的内容脚本连接删除，所以需要先进行一下唯一性校验
-    if (connectionMap.get(currentPort.portName)?.portId === currentPort.portId) {
-      connectionMap.delete(currentPort.portName);
+    if (connectionMap.get(connectionInfo.portName)?.portId === connectionInfo.portId) {
+      connectionMap.delete(connectionInfo.portName);
     }
 
-    onceSessionEndCbs.get(currentPort.portId)?.forEach((cb) => cb());
-    onceSessionEndCbs.delete(currentPort.portId);
+    onceSessionEndCbs.get(connectionInfo.portId)?.forEach((cb) => cb());
+    onceSessionEndCbs.delete(connectionInfo.portId);
   });
 
-  port.onMessage.addListener((_msg) => {
-    const msg = _msg as RequestMessage;
+  port.onMessage.addListener((msg: RequestMessage) => {
+    // 从其他脚本发送到 background 的正常消息
     if (msg.type === 'send_to_bg' && msg.message?.origin?.context) {
       msg.message.origin.tabId = linkedTabId;
       messageRuntime.handleMessage(msg.message);
     }
 
+    // 从其他脚本发送到 background 的同步消息
     if (msg.type === 'sync_with_bg') {
-      // 所有正在运行的连接
       const activePortIds = [...connectionMap.values()].map((conn) => conn.portId);
 
       const stillWaitting = msg.waittingReplyQueue.filter((waittingReply) =>
@@ -281,27 +283,30 @@ chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
       );
       waittingReplyQueue.add(...stillWaitting);
 
-      oncePortConnectedCbs.get(currentPort.portName)?.forEach((cb) => {
-        const portConetext = parsePortInfo(currentPort.portName).context;
-        // devtools, popup, options 都可能涉及UI，onMessage 的注册时机会偏后，所以延迟执行
-        if (['devtools', 'popup', 'options'].includes(portConetext)) {
+      oncePortConnectedCbs.get(connectionInfo.portName)?.forEach((cb) => {
+        const portConetext = parseConnectionInfo(connectionInfo.portName).context;
+
+        // devtools, popup, options, sidePanel 都可能涉及UI，onMessage 的注册时机会偏后，所以延迟执行
+        if (['devtools', 'popup', 'options', 'sidePanel'].includes(portConetext)) {
           setTimeout(() => cb(), 500);
         } else {
           cb();
         }
       });
-      oncePortConnectedCbs.delete(currentPort.portName);
+      oncePortConnectedCbs.delete(connectionInfo.portName);
 
       // 等待回复的消息，通知连接方已经断开，需要废弃
       msg.waittingReplyQueue
         .filter((waittingReply) => !activePortIds.includes(waittingReply.to.portId))
         .forEach((waittingReply) =>
-          notifyPort(currentPort.portName, currentPort.portId).terminate(waittingReply.to.portId),
+          notifyPort(connectionInfo.portName, connectionInfo.portId).terminate(
+            waittingReply.to.portId,
+          ),
         );
 
       // 未发送的消息，通知连接方可以重新发送
       msg.transferFailedQueue.forEach((failedPortName) =>
-        notifyPort(currentPort.portName, currentPort.portId).retry(failedPortName),
+        notifyPort(connectionInfo.portName, connectionInfo.portId).retry(failedPortName),
       );
 
       return;

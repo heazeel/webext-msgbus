@@ -1,9 +1,14 @@
 import { serializeError } from 'serialize-error';
 import uuid from 'tiny-uid';
-import type { Jsonify, JsonValue } from 'type-fest';
 
-import type { BridgeMessage, InternalMessage, OnMessageCallback, RuntimeContext } from '../types';
-import { parsePortInfo, PortName } from '../utils/port';
+import type {
+  BridgeMessage,
+  InternalMessage,
+  OnMessageCallback,
+  RuntimeContext,
+  JsonValue,
+} from '../types';
+import { parseConnectionInfo, PortName } from '../utils/port';
 
 /**
  * 消息通信运行时，会在这里统一处理消息
@@ -14,7 +19,7 @@ import { parsePortInfo, PortName } from '../utils/port';
  */
 class MessageRuntime {
   private taskQueue = new Map<string, { resolve: (v: any) => void; reject: (e: any) => void }>();
-  private onMessageListeners = new Map<string, OnMessageCallback<JsonValue, any>>();
+  private onMessageListeners = new Map<string, OnMessageCallback<JsonValue>>();
 
   constructor(
     private context: RuntimeContext,
@@ -46,7 +51,7 @@ class MessageRuntime {
     // 接收方是自身，即接收消息
     if (message.destination.context === this.context && !message.destination.tabId) {
       this.localMessage?.(message);
-      const { taskId, messageID, messageType } = message;
+      const { taskId, messageId, messageType } = message;
 
       const handleReply = () => {
         const currentTask = this.taskQueue.get(taskId);
@@ -61,28 +66,31 @@ class MessageRuntime {
         }
       };
 
-      const handleSend = async () => {
-        let reply: JsonValue | void = undefined;
+      const handleReceive = async () => {
+        let reply: JsonValue = undefined;
         let err: Error | void = undefined;
         let noHandlerFoundError = false;
+
         try {
-          // 获取当前 context 中的消息接收函数
-          const cb = this.onMessageListeners.get(messageID);
+          const cb = this.onMessageListeners.get(messageId);
+
           if (typeof cb === 'function') {
             reply = await cb({
               sender: message.origin,
-              id: messageID,
+              id: messageId,
               data: message.data,
               timestamp: message.timestamp,
             } as BridgeMessage<JsonValue>);
           } else {
             noHandlerFoundError = true;
-            throw new Error(`在 '${this.context}' 中没有注册接收器来接收 '${messageID}' 的消息`);
+            throw new Error(`在 '${this.context}' 中没有注册接收器来接收 '${messageId}' 的消息`);
           }
         } catch (error) {
           err = error as Error;
         } finally {
-          if (err) message.err = serializeError(err);
+          if (err) {
+            message.err = serializeError(err);
+          }
 
           this.handleMessage({
             ...message,
@@ -101,8 +109,8 @@ class MessageRuntime {
       switch (messageType) {
         case 'reply':
           return handleReply();
-        case 'send':
-          return handleSend();
+        case 'receive':
+          return handleReceive();
       }
     }
 
@@ -112,8 +120,10 @@ class MessageRuntime {
 
   public endTask = (taskId: string) => {
     const currentTask = this.taskQueue.get(taskId);
-    currentTask?.reject('task was ended before it could complete');
-    this.taskQueue.delete(taskId);
+    if (currentTask) {
+      currentTask.reject('task was ended before it could complete');
+      this.taskQueue.delete(taskId);
+    }
   };
 
   /**
@@ -130,11 +140,11 @@ class MessageRuntime {
    * @returns
    */
   public sendMessage = <ReturnData extends JsonValue>(
-    messageID: string,
+    messageId: string,
     data: JsonValue,
     destination: PortName,
   ): Promise<ReturnData> => {
-    const destPortInfo = parsePortInfo(destination);
+    const destPortInfo = parseConnectionInfo(destination);
 
     if (!destPortInfo.context) {
       throw new TypeError(
@@ -144,12 +154,12 @@ class MessageRuntime {
 
     return new Promise((resolve, reject) => {
       const payload: InternalMessage = {
-        messageID,
-        data,
-        destination: destPortInfo,
-        messageType: 'send',
-        taskId: uuid(),
         origin: { context: this.context, tabId: null },
+        destination: destPortInfo,
+        taskId: uuid(7),
+        messageId,
+        messageType: 'receive',
+        data,
         timestamp: Date.now(),
       };
 
@@ -180,9 +190,9 @@ class MessageRuntime {
    */
   public onMessage = <ReceiveData extends JsonValue>(
     messageID: string,
-    callback: OnMessageCallback<ReceiveData, any>,
+    callback: OnMessageCallback<ReceiveData>,
   ) => {
-    this.onMessageListeners.set(messageID, callback as OnMessageCallback<JsonValue, any>);
+    this.onMessageListeners.set(messageID, callback as OnMessageCallback<JsonValue>);
     return () => this.onMessageListeners.delete(messageID);
   };
 }

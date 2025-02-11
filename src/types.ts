@@ -1,6 +1,10 @@
-import type { JsonValue } from 'type-fest';
-
 import type { PortId, PortInfo, PortName } from './utils/port';
+
+type JsonPrimitive = string | number | boolean | null | undefined;
+type JsonObject = { [key: string]: JsonValue };
+type JsonArray = JsonValue[];
+
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
 
 export type RuntimeContext =
   | 'background'
@@ -18,18 +22,18 @@ export interface BridgeMessage<T extends JsonValue> {
   timestamp: number;
 }
 
-export type OnMessageCallback<T extends JsonValue, R = void | JsonValue> = (
+export type OnMessageCallback<T extends JsonValue> = (
   message: BridgeMessage<T>,
-) => R | Promise<R>;
+) => JsonValue | Promise<JsonValue>;
 
 export interface InternalMessage {
-  origin: PortInfo;
-  destination: PortInfo;
+  origin: PortInfo; // 消息发送方
+  destination: PortInfo; // 消息接收方
   taskId: string; // 异步任务id
-  messageID: string;
-  messageType: 'send' | 'reply';
-  err?: JsonValue;
-  data?: JsonValue | void;
+  messageId: string; // 消息标识
+  messageType: 'receive' | 'reply';
+  err?: any;
+  data?: JsonValue;
   timestamp: number;
 }
 

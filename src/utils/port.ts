@@ -30,7 +30,7 @@ export const createPortId = (): PortId => `uid::${uid(7)}`;
  * @param portName
  * @returns
  */
-export const parsePortInfo = (portName: PortName): PortInfo => {
+export const parseConnectionInfo = (portName: PortName): PortInfo => {
   const [, context, tabId] = portName.match(PORT_NAME_REG) || [];
 
   return {
@@ -46,7 +46,7 @@ export const parsePortInfo = (portName: PortName): PortInfo => {
  * @param params
  * @returns
  */
-export const formatPortInfo = ({ context, tabId }: PortInfo): PortName => {
+export const formatConnectionInfo = ({ context, tabId }: PortInfo): PortName => {
   if (['background', 'popup', 'options', 'sidePanel'].includes(context)) {
     return context as 'background' | 'popup' | 'options' | 'sidePanel';
   }

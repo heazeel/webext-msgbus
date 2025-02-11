@@ -58,7 +58,7 @@ class PersistentPort {
 
     switch (msg.status) {
       case 'cannot_transfer': {
-        if (!this.transferFailedQueue.some((m) => m.message.messageID === msg.message.messageID)) {
+        if (!this.transferFailedQueue.some((m) => m.message.messageId === msg.message.messageId)) {
           this.transferFailedQueue.push({
             message: msg.message,
             destName: msg.destination,
@@ -79,7 +79,7 @@ class PersistentPort {
       }
 
       case 'transferring': {
-        if (msg.receipt.message.messageType === 'send') {
+        if (msg.receipt.message.messageType === 'receive') {
           this.waittingReplyQueue.add(msg.receipt);
         }
         break;
@@ -87,7 +87,7 @@ class PersistentPort {
 
       case 'replied': {
         if (msg.message.messageType === 'reply') {
-          this.waittingReplyQueue.remove(msg.message.messageID);
+          this.waittingReplyQueue.remove(msg.message.messageId);
         }
         this.onMessageListeners.forEach((cb) => cb(msg.message));
         break;
