@@ -1,29 +1,19 @@
-# Rsbuild project
+# webext-msgbus-example
 
 ## Setup
 
 Install the dependencies:
 
 ```bash
-pnpm install
+npm install
 ```
 
 ## Get started
 
-Start the dev server:
+Build the extension for production:
 
 ```bash
-pnpm dev
+npm run build
 ```
 
-Build the app for production:
-
-```bash
-pnpm build
-```
-
-Preview the production build locally:
-
-```bash
-pnpm preview
-```
+An `extension` folder will be generated, which can be dragged into the Chrome extensions page for debugging.

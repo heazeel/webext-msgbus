@@ -28,6 +28,9 @@
   ],
   "devtools_page": "devtools/devtools.html",
   "options_page": "options/options.html",
+  "side_panel": {
+    "default_path": "sidePanel/sidePanel.html"
+  },
   "browser_specific_settings": {
     "edge": {
       "browser_action_next_to_addressbar": true
@@ -41,7 +44,8 @@
     "activeTab",
     "storage",
     "unlimitedStorage",
-    "webRequest"
+    "webRequest",
+    "sidePanel"
   ],
   "host_permissions": ["<all_urls>"]
 }

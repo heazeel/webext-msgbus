@@ -1,5 +1,7 @@
 import { onMessage, sendMessage } from 'webext-msgbus/contentScript';
 
+console.log('content-script: init');
+
 // const res = await sendMessage(
 //   'CONTENT_TO_BG',
 //   {

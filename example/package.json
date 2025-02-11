@@ -1,10 +1,12 @@
 {
-  "name": "rsbuild-react-ts",
+  "name": "webext-msgbus-example",
+  "description": "Example of using webext-msgbus",
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "build": "npm run build:plugin && rsbuild build",
-    "build:plugin": "cd .. && npm run build"
+    "build": "rsbuild build",
+    "build:plugin": "cd .. && npm run build",
+    "build:all": "npm run build:plugin && npm run build"
   },
   "dependencies": {
     "react": "^19.0.0",

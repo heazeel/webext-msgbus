@@ -25,6 +25,7 @@ export default defineConfig({
       panel: './src/devtools/panel/index.tsx',
       popup: './src/popup/index.tsx',
       options: './src/options/index.tsx',
+      sidePanel: './src/sidePanel/index.tsx',
     },
   },
   output: {
@@ -56,11 +57,6 @@ export default defineConfig({
     filenameHash: false,
     legalComments: 'none',
   },
-  performance: {
-    // chunkSplit: {
-    //   strategy: "all-in-one",
-    // },
-  },
   tools: {
     htmlPlugin(config) {
       if (config.filename === 'popup.html') {
@@ -74,6 +70,9 @@ export default defineConfig({
       }
       if (config.filename === 'options.html') {
         config.filename = `options/options.html`;
+      }
+      if (config.filename === 'sidePanel.html') {
+        config.filename = `sidePanel/sidePanel.html`;
       }
     },
   },
