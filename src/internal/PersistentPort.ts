@@ -1,5 +1,5 @@
 import type { InternalMessage } from '../types';
-import { decodeConnectionArgs, encodeConnectionArgs } from '../utils/connection';
+import { encodeConnectionArgs } from '../utils/connection';
 import { createPortId, PortName } from '../utils/port';
 import { createWaittingReplyQueue } from '../utils/waittingReply';
 import type { StatusMessage } from './PortMessage';
@@ -10,39 +10,10 @@ import PortMessage from './PortMessage';
  * 创建一个持久的端口，用于当前脚本和后台脚本之间进行通信
  * 所有脚本（除了injectScript）都会与后台脚本建立持久连接
  * 返回与后台脚本建立的端口
- *
- * @class this
- *
- * @constructor
- * @param {string} [name=''] - 端口的可选名称。
- *
- * @method connect
- * @private
- * 建立与 Chrome 运行时端口的连接，并设置消息和断开连接的监听器。
- *
- * @method handleMessage
- * @private
- * 处理来自 Chrome 运行时端口的传入消息，更新队列并根据需要通知监听器。
- *
- * @method onFailure
- * 注册在消息传递失败时调用的回调函数。
- *
- * @param {(message: InternalMessage) => void} cb - 在消息传递失败时调用的回调函数。
- *
- * @method onMessage
- * 注册在接收到消息时调用的回调函数。
- *
- * @param {(message: InternalMessage) => void} cb - 在接收到消息时调用的回调函数。
- *
- * @method postMessage
- * 通过 Chrome 运行时端口发送消息。
- *
- * @param {any} message - 要发送的消息。
  */
 class PersistentPort {
   private readonly portId = createPortId();
   private port: chrome.runtime.Port = null!;
-  // 传输失败的消息，通常由于目标端口未连接导致的
   private transferFailedQueue: Array<{ destName: PortName; message: InternalMessage }> = [];
   private waittingReplyQueue = createWaittingReplyQueue();
   private onMessageListeners = new Set<(message: InternalMessage) => void>();
@@ -53,29 +24,27 @@ class PersistentPort {
   }
 
   private connect() {
+    // 与后台建立连接
     this.port = chrome.runtime.connect({
       name: encodeConnectionArgs({ portName: this.name as PortName, portId: this.portId }),
     });
 
+    // 连接失败，通常是由于未引入 webext-msgbus/background 脚本缺失导致
     if (chrome.runtime.lastError) {
-      // 连接失败，通常是由于background脚本缺失导致
       console.error(
-        'connect failed, normally caused by missing background script. stack:',
+        'Connection failed, normally caused by missing webext-msgbus/background script',
         chrome.runtime.lastError,
       );
       return;
     }
 
-    this.port.onMessage.addListener((msg) => this.handleMessage(msg as StatusMessage));
+    this.port.onMessage.addListener((msg: StatusMessage) => this.handleMessage(msg));
 
     /**
      * service worker 会在不使用时终止，需要在连接断开时重新与后台建立连接，以此来唤醒后台脚本
      * https://developer.chrome.com/blog/eyeos-journey-to-testing-mv3-service%20worker-suspension?hl=zh-cn
      */
-    this.port.onDisconnect.addListener(() => {
-      console.error('disconnected, reconnecting...');
-      this.connect();
-    });
+    this.port.onDisconnect.addListener(() => this.connect());
 
     PortMessage.toBackground(this.port, {
       type: 'sync_with_bg',
@@ -85,7 +54,7 @@ class PersistentPort {
   }
 
   private handleMessage = (msg: StatusMessage) => {
-    console.log(`${decodeConnectionArgs(this.port.name)?.portName || 'content'} 收到消息`, msg);
+    // console.log(`${decodeConnectionArgs(this.port.name)?.portName || 'content'} 收到消息`, msg);
 
     switch (msg.status) {
       case 'cannot_transfer': {

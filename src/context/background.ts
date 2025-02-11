@@ -122,7 +122,7 @@ const messageRuntime = new MessageRuntime(
       !message.destination.tabId
     ) {
       throw new TypeError(
-        'background 向 content-script、inject-script、devtools 发送消息时,必须指定tabId',
+        'background 向 content-script、inject-script、devtools 发送消息时, 必须指定tabId',
       );
     }
 
@@ -217,9 +217,6 @@ const messageRuntime = new MessageRuntime(
   },
 );
 
-/**
- * 监听连接：所有其他脚本的连接都会被这里接收
- */
 chrome.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
   const currentPort = decodeConnectionArgs(port.name);
   if (!currentPort) return;

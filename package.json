@@ -8,16 +8,6 @@
       "require": "./dist/context/background.cjs",
       "types": "./dist/context/background.d.ts"
     },
-    "./contentScript": {
-      "import": "./dist/context/contentScript.js",
-      "require": "./dist/context/contentScript.cjs",
-      "types": "./dist/context/contentScript.d.ts"
-    },
-    "./devtools": {
-      "import": "./dist/context/devtools.js",
-      "require": "./dist/context/devtools.cjs",
-      "types": "./dist/context/devtools.d.ts"
-    },
     "./options": {
       "import": "./dist/context/options.js",
       "require": "./dist/context/options.cjs",
@@ -28,10 +18,25 @@
       "require": "./dist/context/popup.cjs",
       "types": "./dist/context/popup.d.ts"
     },
+    "./devtools": {
+      "import": "./dist/context/devtools.js",
+      "require": "./dist/context/devtools.cjs",
+      "types": "./dist/context/devtools.d.ts"
+    },
+    "./contentScript": {
+      "import": "./dist/context/contentScript.js",
+      "require": "./dist/context/contentScript.cjs",
+      "types": "./dist/context/contentScript.d.ts"
+    },
     "./injectScript": {
       "import": "./dist/context/injectScript.js",
       "require": "./dist/context/injectScript.cjs",
       "types": "./dist/context/injectScript.d.ts"
+    },
+    "./sidePanel": {
+      "import": "./dist/context/sidePanel.js",
+      "require": "./dist/context/sidePanel.cjs",
+      "types": "./dist/context/sidePanel.d.ts"
     }
   },
   "files": [

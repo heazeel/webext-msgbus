@@ -7,6 +7,7 @@ export type PortName =
   | 'background'
   | 'popup'
   | 'options'
+  | 'sidePanel'
   | `inject-script@${number}`
   | `content-script@${number}`
   | `devtools@${number}`;
@@ -40,14 +41,14 @@ export const parsePortInfo = (portName: PortName): PortInfo => {
 
 /**
  * 格式化端点信息
- * background、popup、options直接返回 context
+ * background、popup、options、sidePanel 直接返回 context
  * devtools、content-script、inject-script 返回 context@tabId
  * @param params
  * @returns
  */
 export const formatPortInfo = ({ context, tabId }: PortInfo): PortName => {
-  if (['background', 'popup', 'options'].includes(context)) {
-    return context as 'background' | 'popup' | 'options';
+  if (['background', 'popup', 'options', 'sidePanel'].includes(context)) {
+    return context as 'background' | 'popup' | 'options' | 'sidePanel';
   }
 
   return `${context}@${tabId}` as

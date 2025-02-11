@@ -1,12 +1,12 @@
 import MessageRuntime from '../internal/MessageRuntime';
 import PersistentPort from '../internal/PersistentPort';
-import PostMessage from '../internal/PostMessage';
+import PostMessagePort from '../internal/PostMessagePort';
 
 // content脚本首次与后台建立连接时不需要指定名称，有后台根据sneder信息自动分配
 const port = new PersistentPort();
 
 // content-script 与 inject-script 之间需要通过 postMessage 通信
-const win = new PostMessage('content-script');
+const win = new PostMessagePort('content-script');
 
 const messageRuntime = new MessageRuntime('content-script', (message) => {
   if (message.destination.context === 'inject-script') {

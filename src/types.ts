@@ -3,12 +3,13 @@ import type { JsonValue } from 'type-fest';
 import type { PortId, PortInfo, PortName } from './utils/port';
 
 export type RuntimeContext =
-  | 'devtools'
   | 'background'
   | 'popup'
   | 'options'
+  | 'sidePanel'
   | 'content-script'
-  | 'inject-script';
+  | 'inject-script'
+  | 'devtools';
 
 export interface BridgeMessage<T extends JsonValue> {
   sender: PortInfo;
