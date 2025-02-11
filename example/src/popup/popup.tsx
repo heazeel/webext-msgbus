@@ -4,15 +4,29 @@ import { sendMessage } from 'webext-msgbus/popup';
 
 export const Popup = () => {
   const onClick = async () => {
+    // chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+    //   if (tabs[0].id) {
+    //     const res = await sendMessage(
+    //       'POPUP_TO_INJECT',
+    //       {
+    //         first_name: 'John',
+    //         last_name: 'Doe',
+    //       },
+    //       `inject-script@${tabs[0].id}`,
+    //     );
+    //   }
+    // });
+
     chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
       if (tabs[0].id) {
+        console.log('popup: sendMessage');
         const res = await sendMessage(
-          'POPUP_TO_INJECT',
+          'POPUP_TO_DEVTOOLS',
           {
             first_name: 'John',
             last_name: 'Doe',
           },
-          `inject-script@${tabs[0].id}`,
+          `devtools@${tabs[0].id}`,
         );
       }
     });

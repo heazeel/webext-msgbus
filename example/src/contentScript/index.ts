@@ -23,3 +23,9 @@ onMessage('BG_TO_CONTENT', (message) => {
 
   return { name: 'content' };
 });
+
+onMessage('DEVTOOLS_TO_CONTENT', (message) => {
+  console.log('content-script: receive message from devtools:', message);
+
+  return { name: 'content' };
+});
