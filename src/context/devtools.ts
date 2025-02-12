@@ -7,6 +7,10 @@ const messageRuntime = new MessageRuntime('devtools', (message) => port.postMess
 
 port.onMessage(messageRuntime.handleMessage);
 
+port.onFailure((message) => {
+  messageRuntime.endTask(message.taskId);
+});
+
 export const { sendMessage, onMessage } = messageRuntime;
 
 export default messageRuntime;

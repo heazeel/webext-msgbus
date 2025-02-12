@@ -79,7 +79,7 @@ class PersistentPort {
       }
 
       case 'transferring': {
-        if (msg.receipt.message.messageType === 'receive') {
+        if (msg.receipt.message.messageType === 'send') {
           this.waittingReplyQueue.add(msg.receipt);
         }
         break;

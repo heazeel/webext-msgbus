@@ -6,6 +6,10 @@ const messageRuntime = new MessageRuntime('sidePanel', (message) => port.postMes
 
 port.onMessage(messageRuntime.handleMessage);
 
+port.onFailure((message) => {
+  messageRuntime.endTask(message.taskId);
+});
+
 export const { sendMessage, onMessage } = messageRuntime;
 
 export default messageRuntime;

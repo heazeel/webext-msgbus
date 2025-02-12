@@ -66,7 +66,7 @@ class MessageRuntime {
         }
       };
 
-      const handleReceive = async () => {
+      const handleSend = async () => {
         let reply: JsonValue = undefined;
         let err: Error | void = undefined;
         let noHandlerFoundError = false;
@@ -109,8 +109,8 @@ class MessageRuntime {
       switch (messageType) {
         case 'reply':
           return handleReply();
-        case 'receive':
-          return handleReceive();
+        case 'send':
+          return handleSend();
       }
     }
 
@@ -158,7 +158,7 @@ class MessageRuntime {
         destination: destPortInfo,
         taskId: uuid(7),
         messageId,
-        messageType: 'receive',
+        messageType: 'send',
         data,
         timestamp: Date.now(),
       };

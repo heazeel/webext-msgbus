@@ -164,10 +164,14 @@ const messageRuntime = new MessageRuntime(
         },
       };
 
-      if (message.messageType === 'receive') waittingReplyQueue.add(receipt);
+      // 接收到发送方的消息，等待回复
+      if (message.messageType === 'send') waittingReplyQueue.add(receipt);
+
+      // 接收到答复方的消息，移除等待
       if (message.messageType === 'reply') waittingReplyQueue.remove(message.messageId);
 
       if (senderConnection) {
+        // 通知发送者，消息已经传递
         PortMessage.toExtensionContext(senderConnection.port, {
           status: 'transferring',
           receipt,
@@ -180,7 +184,7 @@ const messageRuntime = new MessageRuntime(
       return;
     }
 
-    if (message.messageType === 'receive') {
+    if (message.messageType === 'send') {
       if (message.origin.context === 'background') {
         oncePortConnected(destName, transfer);
         return;

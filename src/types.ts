@@ -31,7 +31,7 @@ export interface InternalMessage {
   destination: PortInfo; // 消息接收方
   taskId: string; // 异步任务id
   messageId: string; // 消息标识
-  messageType: 'receive' | 'reply';
+  messageType: 'send' | 'reply';
   err?: any;
   data?: JsonValue;
   timestamp: number;
