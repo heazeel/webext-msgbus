@@ -1,13 +1,22 @@
 import MessageRuntime from '../internal/MessageRuntime';
-import PortMessage from '../internal/PortMessage';
 import { decodeConnectionArgs } from '../utils/connection';
 import { createWaittingReplyQueue } from '../utils/waittingReply';
 import { createPortId, formatConnectionInfo, parseConnectionInfo } from '../utils/port';
 
-import type { RequestMessage } from '../internal/PortMessage';
 import type { InternalMessage } from '../types';
 import type { PortId, PortName } from '../utils/port';
 import type { WaittingReply } from '../utils/waittingReply';
+
+type RequestMessage =
+  | {
+      type: 'sync_with_bg';
+      waittingReplyQueue: Array<WaittingReply>;
+      transferFailedQueue: Array<PortName>;
+    }
+  | {
+      type: 'send_to_bg';
+      message: InternalMessage;
+    };
 
 interface PortConnection {
   port: chrome.runtime.Port;
@@ -35,25 +44,19 @@ const onceSessionEnded = (portId: PortId, cb: () => void) => {
 const notifyPort = (portName: PortName, portId: PortId | undefined) => {
   const notifications = {
     reply: (message: InternalMessage) => {
-      const recipient = connectionMap.get(portName);
-      if (recipient) {
-        PortMessage.toExtensionContext(recipient.port, {
-          status: 'replied',
-          message,
-        });
-      }
+      connectionMap.get(portName)?.port.postMessage({
+        status: 'replied',
+        message,
+      });
 
       return notifications;
     },
 
     transferring: (receipt: WaittingReply) => {
-      const sender = connectionMap.get(portName);
-      if (sender) {
-        PortMessage.toExtensionContext(sender.port, {
-          status: 'transferring',
-          receipt,
-        });
-      }
+      connectionMap.get(portName)?.port.postMessage({
+        status: 'transferring',
+        receipt,
+      });
 
       return notifications;
     },
@@ -61,7 +64,7 @@ const notifyPort = (portName: PortName, portId: PortId | undefined) => {
     cannotTransfer: (destination: PortName, message: InternalMessage) => {
       const sender = connectionMap.get(portName);
       if (sender && sender.portId === portId) {
-        PortMessage.toExtensionContext(sender.port, {
+        sender.port.postMessage({
           status: 'cannot_transfer',
           destination,
           message,
@@ -76,8 +79,8 @@ const notifyPort = (portName: PortName, portId: PortId | undefined) => {
         const sender = connectionMap.get(portName);
         const dest = connectionMap.get(targetPort);
 
-        if (sender && sender.portId === portId && dest) {
-          PortMessage.toExtensionContext(sender.port, {
+        if (sender && dest && sender.portId === portId) {
+          sender.port.postMessage({
             status: 'retry',
             portName: targetPort,
           });
@@ -97,7 +100,7 @@ const notifyPort = (portName: PortName, portId: PortId | undefined) => {
     terminate: (portId: PortId) => {
       const conn = connectionMap.get(portName);
       if (conn && conn.portId === portId) {
-        PortMessage.toExtensionContext(conn.port, {
+        conn.port.postMessage({
           status: 'terminated',
           portId,
         });
@@ -172,7 +175,7 @@ const messageRuntime = new MessageRuntime(
 
       if (senderConnection) {
         // 通知发送者，消息已经传递
-        PortMessage.toExtensionContext(senderConnection.port, {
+        senderConnection.port.postMessage({
           status: 'transferring',
           receipt,
         });

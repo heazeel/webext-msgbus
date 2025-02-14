@@ -1,9 +1,30 @@
 import type { InternalMessage } from '../types';
 import { encodeConnectionArgs } from '../utils/connection';
-import { createPortId, PortName } from '../utils/port';
-import { createWaittingReplyQueue } from '../utils/waittingReply';
-import type { StatusMessage } from './PortMessage';
-import PortMessage from './PortMessage';
+import { createPortId, PortId, PortName } from '../utils/port';
+import { createWaittingReplyQueue, WaittingReply } from '../utils/waittingReply';
+
+export type StatusMessage =
+  | {
+      status: 'cannot_transfer';
+      message: InternalMessage;
+      destination: PortName;
+    }
+  | {
+      status: 'retry';
+      portName: PortName;
+    }
+  | {
+      status: 'transferring';
+      receipt: WaittingReply;
+    }
+  | {
+      status: 'replied';
+      message: InternalMessage;
+    }
+  | {
+      status: 'terminated';
+      portId: PortId;
+    };
 
 /**
  * 提供原子通信能力
@@ -46,7 +67,7 @@ class PersistentPort {
      */
     this.port.onDisconnect.addListener(() => this.connect());
 
-    PortMessage.toBackground(this.port, {
+    this.port.postMessage({
       type: 'sync_with_bg',
       waittingReplyQueue: this.waittingReplyQueue.entries(),
       transferFailedQueue: [...new Set(this.transferFailedQueue.map(({ destName }) => destName))],
@@ -116,10 +137,7 @@ class PersistentPort {
   }
 
   public postMessage(message: any): void {
-    PortMessage.toBackground(this.port, {
-      type: 'send_to_bg',
-      message,
-    });
+    this.port.postMessage({ type: 'send_to_bg', message });
   }
 }
 
