@@ -7,7 +7,7 @@ export type PortName =
   | 'background'
   | 'popup'
   | 'options'
-  | 'sidePanel'
+  | 'sidepanel'
   | `inject-script@${number}`
   | `content-script@${number}`
   | `devtools@${number}`;
@@ -18,7 +18,7 @@ export interface PortInfo {
 }
 
 const PORT_NAME_REG =
-  /^((?:background$)|devtools|popup|options|content-script|inject-script)(?:@(\d+)?)?$/;
+  /^((?:background$)|devtools|popup|options|sidepanel|content-script|inject-script)(?:@(\d+)?)?$/;
 
 export const createPortId = (): PortId => `uid::${uid(7)}`;
 
@@ -47,8 +47,8 @@ export const parseConnectionInfo = (portName: PortName): PortInfo => {
  * @returns
  */
 export const formatConnectionInfo = ({ context, tabId }: PortInfo): PortName => {
-  if (['background', 'popup', 'options', 'sidePanel'].includes(context)) {
-    return context as 'background' | 'popup' | 'options' | 'sidePanel';
+  if (['background', 'popup', 'options', 'sidepanel'].includes(context)) {
+    return context as 'background' | 'popup' | 'options' | 'sidepanel';
   }
 
   return `${context}@${tabId}` as
