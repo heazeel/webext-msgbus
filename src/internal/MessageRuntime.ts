@@ -67,7 +67,7 @@ class MessageRuntime {
       };
 
       const handleSend = async () => {
-        let reply: JsonValue = undefined;
+        let reply: JsonValue | void = undefined;
         let err: Error | void = undefined;
         let noHandlerFoundError = false;
 

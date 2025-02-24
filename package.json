@@ -1,6 +1,6 @@
 {
   "name": "webext-msgbus",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "type": "module",
   "exports": {
     "./background": {
@@ -49,6 +49,21 @@
     "type": "git",
     "url": "https://github.com/heazeel/webext-msgbus.git"
   },
+  "keywords": [
+    "chrome",
+    "extension",
+    "messaging",
+    "message-bus",
+    "communication",
+    "protocol",
+    "bridge",
+    "content",
+    "background",
+    "devtools",
+    "script",
+    "crx"
+  ],
+  "license": "MIT",
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",

@@ -24,7 +24,7 @@ export interface BridgeMessage<T extends JsonValue> {
 
 export type OnMessageCallback<T extends JsonValue> = (
   message: BridgeMessage<T>,
-) => JsonValue | Promise<JsonValue> | undefined;
+) => void | JsonValue | Promise<void | JsonValue>;
 
 export interface InternalMessage {
   origin: PortInfo; // 消息发送方
@@ -33,7 +33,7 @@ export interface InternalMessage {
   messageId: string; // 消息标识
   messageType: 'send' | 'reply';
   err?: any;
-  data?: JsonValue;
+  data?: void | JsonValue;
   timestamp: number;
 }
 
