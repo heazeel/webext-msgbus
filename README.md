@@ -68,13 +68,27 @@ Optionally, this callback can return a value or a Promise, resolved value will s
 
 ## Usage
 
+[example](./example/)
+
+### content-script
+```ts
+import { sendMessage, onMessage } from 'webext-msgbus/contentScript';
+
+sendMessage('MSG_ID_1', 'Your Data', 'background');
+
+onMessage('MSG_ID_2', (msg) => {
+  const { data } = msg;
+  console.log(data);
+})
+```
+
 ### background
 ```ts
 import { sendMessage, onMessage } from 'webext-msgbus/background';
 
-sendMessage('MSG_ID', 'Your Data', `content-script@${tabs[0].id}`)
+sendMessage('MSG_ID_2', 'Your Data', `content-script@${tabs[0].id}`);
 
-onMessage('MSG_ID', (msg) => {
+onMessage('MSG_ID_1', (msg) => {
   const { data } = msg;
   console.log(data);
 })
