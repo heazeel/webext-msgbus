@@ -68,7 +68,7 @@ Optionally, this callback can return a value or a Promise, resolved value will s
 
 ## Usage
 
-[example](./example/)
+[example](https://github.com/heazeel/webext-msgbus/tree/master/example)
 
 ### content-script
 ```ts
