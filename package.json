@@ -1,42 +1,42 @@
 {
   "name": "webext-msgbus",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "type": "module",
   "exports": {
     "./background": {
-      "import": "./dist/context/background.js",
-      "require": "./dist/context/background.cjs",
-      "types": "./dist/context/background.d.ts"
+      "import": "./dist/esm/background.js",
+      "require": "./dist/cjs/background.cjs",
+      "types": "./dist/types/background.d.ts"
     },
     "./options": {
-      "import": "./dist/context/options.js",
-      "require": "./dist/context/options.cjs",
-      "types": "./dist/context/options.d.ts"
+      "import": "./dist/esm/options.js",
+      "require": "./dist/cjs/options.cjs",
+      "types": "./dist/types/options.d.ts"
     },
     "./popup": {
-      "import": "./dist/context/popup.js",
-      "require": "./dist/context/popup.cjs",
-      "types": "./dist/context/popup.d.ts"
+      "import": "./dist/esm/popup.js",
+      "require": "./dist/cjs/popup.cjs",
+      "types": "./dist/types/popup.d.ts"
     },
     "./devtools": {
-      "import": "./dist/context/devtools.js",
-      "require": "./dist/context/devtools.cjs",
-      "types": "./dist/context/devtools.d.ts"
+      "import": "./dist/esm/devtools.js",
+      "require": "./dist/cjs/devtools.cjs",
+      "types": "./dist/types/devtools.d.ts"
     },
     "./contentScript": {
-      "import": "./dist/context/contentScript.js",
-      "require": "./dist/context/contentScript.cjs",
-      "types": "./dist/context/contentScript.d.ts"
+      "import": "./dist/esm/contentScript.js",
+      "require": "./dist/cjs/contentScript.cjs",
+      "types": "./dist/types/contentScript.d.ts"
     },
     "./injectScript": {
-      "import": "./dist/context/injectScript.js",
-      "require": "./dist/context/injectScript.cjs",
-      "types": "./dist/context/injectScript.d.ts"
+      "import": "./dist/esm/injectScript.js",
+      "require": "./dist/cjs/injectScript.cjs",
+      "types": "./dist/types/injectScript.d.ts"
     },
     "./sidePanel": {
-      "import": "./dist/context/sidePanel.js",
-      "require": "./dist/context/sidePanel.cjs",
-      "types": "./dist/context/sidePanel.d.ts"
+      "import": "./dist/esm/sidePanel.js",
+      "require": "./dist/cjs/sidePanel.cjs",
+      "types": "./dist/types/sidePanel.d.ts"
     }
   },
   "files": [
@@ -65,16 +65,20 @@
   ],
   "license": "MIT",
   "scripts": {
-    "build": "rslib build",
-    "dev": "rslib build --watch",
+    "build": "rollup -c",
     "release:patch": "npm version patch && npm publish",
     "release:minor": "npm version minor && npm publish",
     "release:major": "npm version major && npm publish"
   },
   "devDependencies": {
-    "@rslib/core": "^0.5.1",
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^12.1.2",
     "@types/chrome": "^0.0.301",
     "@types/node": "^22.13.5",
+    "rollup": "^4.34.8",
+    "rollup-plugin-dts": "^6.1.1",
     "typescript": "^5.7.3"
   },
   "dependencies": {
